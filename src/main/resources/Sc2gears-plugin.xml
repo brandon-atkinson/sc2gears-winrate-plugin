@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Plugin descriptor, contains plugin meta-data. -->
+<plugin docVersion="1.0">
+ 
+ <name>Win Rate</name>
+ 
+ <authorFirstName>Brandon</authorFirstName>
+ <authorLastName>Atkinson</authorLastName>
+ <authorEmail>brandon.n.atkinson@gmail.com</authorEmail>
+ 
+ <version>${project.version}</version>
+ <releaseDate>${project.releaseDate}</releaseDate> <!-- Format: "yyyy-MM-dd" -->
+ 
+ <apiVersion>2.7</apiVersion> <!-- Plugin API version implemented/used by the plugin. -->
+ 
+ <homePage>http://www.gorjusb.org/sc2gears-winrate-plugin</homePage>
+ 
+ <!-- Description can be plain text or HTML text, can contain multiple lines. -->
+ <description isHtml="true"><![CDATA[<br>A plugin that tracks and displays the winrate for all replays auto-saved in the current sc2gears session.]]></description>
+ 
+ <!--
+ The main class must implement the "hu.belicza.andras.sc2gearspluginapi.Plugin" interface,
+ and must have a public no-arg constructor (a constructor that takes no arguments).
+ 
+ The main class must also be unique: cannot be added 2 plugins with the same main class!
+ -->
+ <mainClass>org.gorjusb.sc2gears.winrate.WinratePlugin</mainClass>
+ 
+</plugin>
