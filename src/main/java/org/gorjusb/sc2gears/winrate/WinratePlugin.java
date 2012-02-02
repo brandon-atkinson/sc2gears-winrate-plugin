@@ -8,6 +8,9 @@ import hu.belicza.andras.sc2gearspluginapi.PluginServices;
 import hu.belicza.andras.sc2gearspluginapi.SettingsControl;
 import hu.belicza.andras.sc2gearspluginapi.api.ReplayFactoryApi.ReplayContent;
 import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayAutosaveListener;
+import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpCallback;
+import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpsPopupMenuItemListener;
+import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IPlayer;
 import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IReplay;
 
 import java.awt.Window;
@@ -20,25 +23,33 @@ public class WinratePlugin implements Plugin, Configurable {
 	private PluginServices pluginServces;
 	private GeneralServices generalServices;
 
-	private ReplayAutosaveListener replayListener;
+	private ReplayAutosaveListener replayAutosaveListener;
+	private ReplayOpsPopupMenuItemListener replayOpsMenuListener;
+	private Integer menuListenerHandler;
 	private Window winrateWindow;
 
 	private WinrateModel winrateModel = new WinrateModel();
 
 	class WinrateReplayAutoSaveListener implements ReplayAutosaveListener {
-		@Override
 		public void replayAutosaved(File autosavedReplayFile,
 				File originalReplayFile) {
 			IReplay replay = generalServices.getReplayFactoryApi().getReplay(
 					autosavedReplayFile.getAbsolutePath(),
 					EnumSet.allOf(ReplayContent.class));
-			
-			for (String winner : replay.getWinnerNames().split(",")) {
-				System.out.println(winner.trim());
-			}
-			
-			for (String player : replay.getPlayerNames().split(",")) {
-				System.out.println(player.trim());
+		}
+	}
+
+	class PrintWinnersOpsMenuItemListener implements ReplayOpsPopupMenuItemListener {
+		public void actionPerformed(File[] files, ReplayOpCallback callback,
+				Integer handler) {
+			for (File file : files) {
+				IReplay replay = generalServices.getReplayFactoryApi()
+						.getReplay(file.getAbsolutePath(),
+								EnumSet.allOf(ReplayContent.class));
+				for (IPlayer player : replay.getPlayers()) {
+					System.out.println(player.getPlayerId().getFullName()
+							+ ": " + (player.isWinner() ? "winner" : "loser"));
+				}
 			}
 		}
 	}
@@ -59,7 +70,8 @@ public class WinratePlugin implements Plugin, Configurable {
 		 * unregister our replay listener, because we play nice
 		 */
 		generalServices.getCallbackApi().removeReplayAutosaveListener(
-				replayListener);
+				replayAutosaveListener);
+		generalServices.getCallbackApi().removeReplayOpsPopupMenuItem(menuListenerHandler);
 	}
 
 	public void init(PluginDescriptor pluginDescriptor,
@@ -68,8 +80,13 @@ public class WinratePlugin implements Plugin, Configurable {
 		this.pluginServces = pluginServices;
 		this.generalServices = generalServices;
 
+		replayAutosaveListener = new WinrateReplayAutoSaveListener();
+		replayOpsMenuListener = new PrintWinnersOpsMenuItemListener();
+		
 		generalServices.getCallbackApi().addReplayAutosaveListener(
-				new WinrateReplayAutoSaveListener());
+				replayAutosaveListener);
+		menuListenerHandler = generalServices.getCallbackApi().addReplayOpsPopupMenuItem("Print Player Win/Loss",
+				null, replayOpsMenuListener);
 	}
 
 	PluginDescriptor getPluginDescriptor() {
@@ -95,4 +112,5 @@ public class WinratePlugin implements Plugin, Configurable {
 	void setGeneralServices(GeneralServices generalServices) {
 		this.generalServices = generalServices;
 	}
+
 }
