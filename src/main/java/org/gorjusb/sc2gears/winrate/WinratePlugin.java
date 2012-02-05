@@ -13,7 +13,6 @@ import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpsPopupMenuItemLi
 import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IPlayer;
 import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IReplay;
 
-import java.awt.Window;
 import java.io.File;
 import java.util.EnumSet;
 
@@ -26,7 +25,6 @@ public class WinratePlugin implements Plugin, Configurable {
 	private ReplayAutosaveListener replayAutosaveListener;
 	private ReplayOpsPopupMenuItemListener replayOpsMenuListener;
 	private Integer menuListenerHandler;
-	private Window winrateWindow;
 	private WinrateSettingsControl settingsControl;
 
 	private WinrateModel winrateModel = new WinrateModel();
@@ -40,7 +38,8 @@ public class WinratePlugin implements Plugin, Configurable {
 		}
 	}
 
-	class PrintWinnersOpsMenuItemListener implements ReplayOpsPopupMenuItemListener {
+	class PrintWinnersOpsMenuItemListener implements
+			ReplayOpsPopupMenuItemListener {
 		public void actionPerformed(File[] files, ReplayOpCallback callback,
 				Integer handler) {
 			for (File file : files) {
@@ -75,7 +74,8 @@ public class WinratePlugin implements Plugin, Configurable {
 		 */
 		generalServices.getCallbackApi().removeReplayAutosaveListener(
 				replayAutosaveListener);
-		generalServices.getCallbackApi().removeReplayOpsPopupMenuItem(menuListenerHandler);
+		generalServices.getCallbackApi().removeReplayOpsPopupMenuItem(
+				menuListenerHandler);
 	}
 
 	public void init(PluginDescriptor pluginDescriptor,
@@ -86,11 +86,12 @@ public class WinratePlugin implements Plugin, Configurable {
 
 		replayAutosaveListener = new WinrateReplayAutoSaveListener();
 		replayOpsMenuListener = new PrintWinnersOpsMenuItemListener();
-		
+
 		generalServices.getCallbackApi().addReplayAutosaveListener(
 				replayAutosaveListener);
-		menuListenerHandler = generalServices.getCallbackApi().addReplayOpsPopupMenuItem("Print Player Win/Loss",
-				null, replayOpsMenuListener);
+		menuListenerHandler = generalServices.getCallbackApi()
+				.addReplayOpsPopupMenuItem("Print Player Win/Loss", null,
+						replayOpsMenuListener);
 	}
 
 	PluginDescriptor getPluginDescriptor() {

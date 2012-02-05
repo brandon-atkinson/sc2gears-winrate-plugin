@@ -10,7 +10,7 @@
  <authorEmail>brandon.n.atkinson@gmail.com</authorEmail>
  
  <version>${project.version}</version>
- <releaseDate>${project.releaseDate}</releaseDate> <!-- Format: "yyyy-MM-dd" -->
+ <releaseDate>${timestamp}</releaseDate> <!-- Format: "yyyy-MM-dd" -->
  
  <apiVersion>2.7</apiVersion> <!-- Plugin API version implemented/used by the plugin. -->
  

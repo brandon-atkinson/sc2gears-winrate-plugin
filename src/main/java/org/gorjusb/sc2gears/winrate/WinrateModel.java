@@ -19,16 +19,28 @@ public class WinrateModel {
 		this.gamesDrawn = gamesDrawn;
 	}
 
-	public int addGameWon() {
-		return gamesWon += 1;
+	public int getGamesWon() {
+		return gamesWon;
 	}
 
-	public int addGameLost() {
-		return gamesLost += 1;
+	public void setGamesWon(int gamesWon) {
+		this.gamesWon = gamesWon;
 	}
 
-	public int addGameDrawn() {
-		return gamesDrawn += 1;
+	public int getGamesLost() {
+		return gamesLost;
+	}
+
+	public void setGamesLost(int gamesLost) {
+		this.gamesLost = gamesLost;
+	}
+
+	public int getGamesDrawn() {
+		return gamesDrawn;
+	}
+
+	public void setGamesDrawn(int gamesDrawn) {
+		this.gamesDrawn = gamesDrawn;
 	}
 
 	public int getWinRatePercentage() {

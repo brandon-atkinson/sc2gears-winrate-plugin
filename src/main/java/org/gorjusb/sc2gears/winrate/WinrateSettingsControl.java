@@ -5,25 +5,45 @@ import hu.belicza.andras.sc2gearspluginapi.SettingsControl;
 import java.awt.Container;
 
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 public class WinrateSettingsControl implements SettingsControl {
+	private WinrateSettingsPanel panel;
+	private JDialog dialog;
+	
 	public WinrateSettingsControl() {
 	}
 
 	public Container getEditorPanel() {
-		return null;
+		return panel;
 	}
 
 	public void onCancelButtonPressed() {
-		// TODO 
+		JOptionPane.showConfirmDialog(panel, "TODO: implement Cancel");
 	}
 
 	public void onOkButtonPressed() {
-		// TODO Auto-generated method stub
+		JOptionPane.showConfirmDialog(panel, "TODO: implement OK");
 	}
 
-	public void receiveSettingsDialog(JDialog arg0) {
-		// TODO Auto-generated method stub
+	public void receiveSettingsDialog(JDialog dialog) {
+		this.dialog = dialog;
+	}
+	
+	public WinrateSettingsPanel getPanel() {
+		return panel;
+	}
+
+	public void setPanel(WinrateSettingsPanel panel) {
+		this.panel = panel;
+	}
+
+	public JDialog getDialog() {
+		return dialog;
+	}
+
+	public void setDialog(JDialog dialog) {
+		this.dialog = dialog;
 	}
 
 }
