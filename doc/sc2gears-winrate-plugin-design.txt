@@ -1,0 +1,15 @@
+Sc2Gears Win Rate Plugin
+========================
+
+Goal:
+Provide a tripometer-style win rate tracker for users in 
+
+Sub-goals:
+Allow tracking of win-rate between sessions. 
+Allow arbitrary reset of win-rate data.
+Allow multiple concurrent win rate trackers (to allow longer/shorter durations)
+Allow configuration of what triggers a replay to be added to win-rate stats:
+   On favored players list
+   Game type (AutoMM, etc)
+   Format (1v1, etc)
+   Gateway (America, etc)
