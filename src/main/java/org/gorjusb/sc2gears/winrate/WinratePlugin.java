@@ -58,7 +58,7 @@ public class WinratePlugin implements Plugin, Configurable {
 	}
 
 	public SettingsControl getSettingsControl() {
-		return null;
+		return 
 	}
 
 	public boolean isActionRequired() {
