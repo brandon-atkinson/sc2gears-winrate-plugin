@@ -27,6 +27,7 @@ public class WinratePlugin implements Plugin, Configurable {
 	private ReplayOpsPopupMenuItemListener replayOpsMenuListener;
 	private Integer menuListenerHandler;
 	private Window winrateWindow;
+	private WinrateSettingsControl settingsControl;
 
 	private WinrateModel winrateModel = new WinrateModel();
 
@@ -58,7 +59,10 @@ public class WinratePlugin implements Plugin, Configurable {
 	}
 
 	public SettingsControl getSettingsControl() {
-		return new WinrateSettingsControl();
+		if (settingsControl == null) {
+			settingsControl = new WinrateSettingsControl();
+		}
+		return settingsControl;
 	}
 
 	public boolean isActionRequired() {
