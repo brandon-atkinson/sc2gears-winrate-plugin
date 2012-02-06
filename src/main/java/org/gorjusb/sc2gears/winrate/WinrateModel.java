@@ -43,12 +43,5 @@ public class WinrateModel {
 		this.gamesDrawn = gamesDrawn;
 	}
 
-	public int getWinRatePercentage() {
-		BigDecimal effectiveWinsFromDraw = new BigDecimal(gamesDrawn).divide(new BigDecimal(2));
-		BigDecimal totalEffectiveWins = effectiveWinsFromDraw.add(new BigDecimal(gamesWon));
-		BigDecimal totalGames = new BigDecimal(gamesWon).add(new BigDecimal(gamesLost)).add(new BigDecimal(gamesDrawn));
-		BigDecimal winRate = totalEffectiveWins.divide(totalGames, new MathContext(3, RoundingMode.HALF_UP)).multiply(new BigDecimal(100));
-		
-		return winRate.intValue();
-	}
+
 }
