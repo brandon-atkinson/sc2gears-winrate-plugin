@@ -1,19 +1,14 @@
 package org.gorjusb.sc2gears.winrate;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-
-
-public class WinrateModel {
+public class WinrateStatsModel {
 	private int gamesWon;
 	private int gamesLost;
 	private int gamesDrawn;
 	
-	public WinrateModel() {
+	public WinrateStatsModel() {
 	}
 
-	public WinrateModel(int gamesWon, int gamesLost, int gamesDrawn) {
+	public WinrateStatsModel(int gamesWon, int gamesLost, int gamesDrawn) {
 		this.gamesWon = gamesWon;
 		this.gamesLost = gamesLost;
 		this.gamesDrawn = gamesDrawn;

@@ -27,7 +27,7 @@ public class WinratePlugin implements Plugin, Configurable {
 	private Integer menuListenerHandler;
 	private WinrateSettingsControl settingsControl;
 
-	private WinrateModel winrateModel = new WinrateModel();
+	private WinrateStatsModel winrateModel = new WinrateStatsModel();
 
 	class WinrateReplayAutoSaveListener implements ReplayAutosaveListener {
 		public void replayAutosaved(File autosavedReplayFile,
@@ -58,9 +58,9 @@ public class WinratePlugin implements Plugin, Configurable {
 	}
 
 	public SettingsControl getSettingsControl() {
-		if (settingsControl == null) {
-			settingsControl = new WinrateSettingsControl();
-		}
+		SettingsControl settingsControl = new WinrateSettingsControl(
+				pluginServces.getSettingsApi(), generalServices.getInfoApi());
+
 		return settingsControl;
 	}
 

@@ -51,6 +51,15 @@
 					<descriptor>src/main/assembly/sc2gears-plugin-assembly.xml</descriptor>
 				</descriptors>
 			</configuration>
+         <executions>
+            <execution>
+               <id>make-assembly</id>
+               <phase>package</phase>
+               <goals>
+                  <goal>single</goal>
+               </goals>
+            </execution>
+         </executions>
 			</plugin>
 		</plugins>
 	</build>
