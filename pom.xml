@@ -24,6 +24,12 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>binding</artifactId>
+			<version>2.0.6</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
@@ -42,6 +48,20 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+				<archive>
+					<manifest>
+						<addClasspath>true</addClasspath>
+					</manifest>
+				</archive>
+				</configuration>
+			</plugin>
+			
 			<plugin>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-assembly-plugin</artifactId>

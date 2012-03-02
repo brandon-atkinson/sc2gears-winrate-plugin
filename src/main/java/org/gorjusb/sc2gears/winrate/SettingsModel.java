@@ -1,15 +1,14 @@
 package org.gorjusb.sc2gears.winrate;
 
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 
-import javax.swing.event.SwingPropertyChangeSupport;
+import com.jgoodies.binding.beans.ExtendedPropertyChangeSupport;
 
 public class SettingsModel {
 	public static final String REPLAY_INCLUSION_CRITERIA_PROP = "replayInclusionCriteria";
 	public static final String SELECTED_FAVORED_PLAYER_PROP = "selectedFavoredPlayer";
 	
-	private final PropertyChangeSupport propSupport = new SwingPropertyChangeSupport(this);
+	private final ExtendedPropertyChangeSupport propSupport = new ExtendedPropertyChangeSupport(this);
 	private ReplayInclusionCriteria replayInclusionCriteria;
 	private String selectedFavoredPlayer;
 	
