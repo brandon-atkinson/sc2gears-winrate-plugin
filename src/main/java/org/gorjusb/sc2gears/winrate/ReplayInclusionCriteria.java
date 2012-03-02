@@ -1,5 +1,5 @@
 package org.gorjusb.sc2gears.winrate;
 
 public enum ReplayInclusionCriteria {
-	ANY_FAVORED_PLAYER, SELECTED_FAVORED_PLAYER
+	ALL_FAVORED_PLAYERS, SELECTED_FAVORED_PLAYER
 }

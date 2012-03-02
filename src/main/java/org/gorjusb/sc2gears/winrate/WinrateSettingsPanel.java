@@ -8,6 +8,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
@@ -20,7 +23,8 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
-public class WinrateSettingsPanel extends JPanel {
+public class WinrateSettingsPanel extends JPanel implements
+		PropertyChangeListener {
 	/**
 	 * 
 	 */
@@ -29,9 +33,12 @@ public class WinrateSettingsPanel extends JPanel {
 	private JRadioButton rdbtnAllFavoredPlayers;
 	private JRadioButton rdbtnSelectedFavoredPlayer;
 	private JComboBox favoredPlayersCombo;
-	private ReplayInclusionCriteria inclusionCriteria;
+	private boolean updatingUi = false;
 
-	public WinrateSettingsPanel() {
+	public WinrateSettingsPanel(final SettingsModel model,
+			List<String> favoredPlayers) {
+		model.addPropertyChangeListener(this);
+
 		setLayout(new BorderLayout(0, 0));
 
 		JLabel lblWinRatePlugin = new JLabel("Win Rate Plugin Settings");
@@ -57,14 +64,21 @@ public class WinrateSettingsPanel extends JPanel {
 		ActionListener rdbtnListener = new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				setInclusionCriteria(ReplayInclusionCriteria.valueOf(e
-						.getActionCommand()));
+				if (!updatingUi) {
+					try {
+						updatingUi = true;
+						model.setReplayInclusionCriteria(ReplayInclusionCriteria
+								.valueOf(e.getActionCommand()));
+					} finally {
+						updatingUi = false;
+					}
+				}
 			}
 		};
 
 		rdbtnAllFavoredPlayers = new JRadioButton("Involving favored players");
 		rdbtnAllFavoredPlayers
-				.setActionCommand(ReplayInclusionCriteria.ANY_FAVORED_PLAYER
+				.setActionCommand(ReplayInclusionCriteria.ALL_FAVORED_PLAYERS
 						.toString());
 
 		rdbtnAllFavoredPlayers.addActionListener(rdbtnListener);
@@ -76,17 +90,12 @@ public class WinrateSettingsPanel extends JPanel {
 		gbc_rdbtnFavoredPlayers.gridy = 2;
 		panel.add(rdbtnAllFavoredPlayers, gbc_rdbtnFavoredPlayers);
 
-		repIncGroup = new ButtonGroup();
-		repIncGroup.add(rdbtnAllFavoredPlayers);
-
 		rdbtnSelectedFavoredPlayer = new JRadioButton(
 				"Involving favored player");
 		rdbtnSelectedFavoredPlayer
 				.setActionCommand(ReplayInclusionCriteria.SELECTED_FAVORED_PLAYER
 						.toString());
 		rdbtnSelectedFavoredPlayer.addActionListener(rdbtnListener);
-
-		repIncGroup.setSelected(rdbtnSelectedFavoredPlayer.getModel(), true);
 
 		GridBagConstraints gbc_rdbtnInvolvingFavoredPlayer = new GridBagConstraints();
 		gbc_rdbtnInvolvingFavoredPlayer.anchor = GridBagConstraints.WEST;
@@ -95,8 +104,26 @@ public class WinrateSettingsPanel extends JPanel {
 		gbc_rdbtnInvolvingFavoredPlayer.gridy = 3;
 		panel.add(rdbtnSelectedFavoredPlayer, gbc_rdbtnInvolvingFavoredPlayer);
 
-		favoredPlayersCombo = new JComboBox();
+		repIncGroup = new ButtonGroup();
+		repIncGroup.add(rdbtnAllFavoredPlayers);
+		repIncGroup.add(rdbtnSelectedFavoredPlayer);
+
+		favoredPlayersCombo = new JComboBox(favoredPlayers.toArray());
 		favoredPlayersCombo.setEditable(false);
+
+		favoredPlayersCombo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!updatingUi) {
+					try {
+						updatingUi = true;
+						model.setSelectedFavoredPlayer(favoredPlayersCombo
+								.getSelectedItem().toString());
+					} finally {
+						updatingUi = false;
+					}
+				}
+			}
+		});
 
 		GridBagConstraints gbc_comboBox = new GridBagConstraints();
 		gbc_comboBox.insets = new Insets(0, 0, 5, 0);
@@ -104,56 +131,39 @@ public class WinrateSettingsPanel extends JPanel {
 		gbc_comboBox.gridx = 1;
 		gbc_comboBox.gridy = 3;
 		panel.add(favoredPlayersCombo, gbc_comboBox);
+
+		updateRadioGroup(model.getReplayInclusionCriteria());
+		updateComboBox(model.getSelectedFavoredPlayer());
 	}
 
-	public void setFavoredPlayers(List<String> favoredPlayers) {
-		Object[] playerList = new Object[0];
-		if (favoredPlayers != null) {
-			playerList = favoredPlayers.toArray();
+	public void propertyChange(PropertyChangeEvent evt) {
+
+		if (SettingsModel.REPLAY_INCLUSION_CRITERIA_PROP.equals(evt
+				.getPropertyName())) {
+			updateRadioGroup((ReplayInclusionCriteria) evt.getNewValue());
 		}
 
-		favoredPlayersCombo.setModel(new DefaultComboBoxModel(playerList));
-	}
-
-	public ReplayInclusionCriteria getInclusionCriteria() {
-		return inclusionCriteria;
-	}
-
-	public void setInclusionCriteria(ReplayInclusionCriteria inclusionCriteria) {
-		if (inclusionCriteria == null) {
-			throw new IllegalArgumentException("");
-		} else {
-			this.inclusionCriteria = inclusionCriteria;
+		if (SettingsModel.SELECTED_FAVORED_PLAYER_PROP.equals(evt
+				.getPropertyName())) {
+			updateComboBox((String) evt.getNewValue());
 		}
+	}
 
+	private void updateRadioGroup(ReplayInclusionCriteria value) {
+		System.err.println("inclusion value: " + value);
 		repIncGroup.clearSelection();
-		switch (inclusionCriteria) {
-		case ANY_FAVORED_PLAYER:
+		if (ReplayInclusionCriteria.ALL_FAVORED_PLAYERS.equals(value)) {
 			repIncGroup.setSelected(rdbtnAllFavoredPlayers.getModel(), true);
 			favoredPlayersCombo.setEnabled(false);
-			break;
-
-		case SELECTED_FAVORED_PLAYER:
+		} else if (ReplayInclusionCriteria.SELECTED_FAVORED_PLAYER
+				.equals(value)) {
 			repIncGroup
 					.setSelected(rdbtnSelectedFavoredPlayer.getModel(), true);
 			favoredPlayersCombo.setEnabled(true);
-			break;
 		}
 	}
 
-	public String getSelectedFavoredPlayer() {
-		String favoredPlayer = null;
-
-		if (ReplayInclusionCriteria.SELECTED_FAVORED_PLAYER
-				.equals(inclusionCriteria)) {
-			favoredPlayer = favoredPlayersCombo.getSelectedItem().toString();
-		}
-
-		return favoredPlayer;
+	private void updateComboBox(String value) {
+		favoredPlayersCombo.setSelectedItem(value);
 	}
-
-	public void setSelectedPlayer(String playerName) {
-		favoredPlayersCombo.setSelectedItem(playerName);
-	}
-
 }

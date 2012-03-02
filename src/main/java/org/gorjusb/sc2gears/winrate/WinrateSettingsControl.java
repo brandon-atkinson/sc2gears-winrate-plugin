@@ -16,33 +16,34 @@ public class WinrateSettingsControl implements SettingsControl {
 	private JDialog parentDialog;
 	private SettingsApi settingsApi;
 	private InfoApi infoApi;
-
-	public WinrateSettingsControl(SettingsApi settingsApi, InfoApi infoApi) {
+	private SettingsModel settingsModel;
+	
+	public WinrateSettingsControl(SettingsModel settingsModel, SettingsApi settingsApi, InfoApi infoApi) {
+		this.settingsModel = settingsModel;
 		this.settingsApi = settingsApi;
 		this.infoApi = infoApi;
 	}
 
 	public Container getEditorPanel() {
-		panel = new WinrateSettingsPanel();
-		panel.setFavoredPlayers(infoApi.getFavoredPlayerList());
-		
-		ReplayInclusionCriteria inclusion = ReplayInclusionCriteria.ANY_FAVORED_PLAYER;
+		ReplayInclusionCriteria inclusion = ReplayInclusionCriteria.ALL_FAVORED_PLAYERS;
 		try {
 			inclusion = ReplayInclusionCriteria.valueOf(settingsApi.getString(INCLUSION_CRITERIA_PROP));
 		} catch (IllegalArgumentException iae) {
-			//use default
+			System.err.println("couldn't initialize model: " + iae);
 		} catch (NullPointerException npe) {
-			//use default
+			System.err.println("couldn't initialize model: " + npe);
 		}
-		panel.setInclusionCriteria(inclusion);
-		
+		settingsModel.setReplayInclusionCriteria(inclusion);
 		
 		String selectedPlayer = settingsApi.getString(SELECTED_FAVORED_PLAYER_PROP);
 		if (Arrays.asList(infoApi.getFavoredPlayerList()).contains(selectedPlayer)) {
-			panel.setSelectedPlayer(selectedPlayer);
+		    settingsModel.setSelectedFavoredPlayer(selectedPlayer);
 		} else {
 			settingsApi.remove(SELECTED_FAVORED_PLAYER_PROP);
 		}
+		
+		panel = new WinrateSettingsPanel(settingsModel, infoApi.getFavoredPlayerList());
+		
 		return panel;
 	}
 
@@ -51,11 +52,11 @@ public class WinrateSettingsControl implements SettingsControl {
 	}
 
 	public void onOkButtonPressed() {
-		ReplayInclusionCriteria inclusion = panel.getInclusionCriteria();
+		ReplayInclusionCriteria inclusion = settingsModel.getReplayInclusionCriteria();
 		settingsApi.set(INCLUSION_CRITERIA_PROP, inclusion);
 		
 		if (ReplayInclusionCriteria.SELECTED_FAVORED_PLAYER.equals(inclusion)) {
-			settingsApi.set(SELECTED_FAVORED_PLAYER_PROP, panel.getSelectedFavoredPlayer());
+			settingsApi.set(SELECTED_FAVORED_PLAYER_PROP, settingsModel.getSelectedFavoredPlayer());
 		} else {
 			settingsApi.remove(SELECTED_FAVORED_PLAYER_PROP);
 		}
