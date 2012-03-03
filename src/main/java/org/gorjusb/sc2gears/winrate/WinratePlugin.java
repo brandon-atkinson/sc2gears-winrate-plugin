@@ -1,11 +1,9 @@
 package org.gorjusb.sc2gears.winrate;
 
-import hu.belicza.andras.sc2gearspluginapi.Configurable;
 import hu.belicza.andras.sc2gearspluginapi.GeneralServices;
 import hu.belicza.andras.sc2gearspluginapi.Plugin;
 import hu.belicza.andras.sc2gearspluginapi.PluginDescriptor;
 import hu.belicza.andras.sc2gearspluginapi.PluginServices;
-import hu.belicza.andras.sc2gearspluginapi.SettingsControl;
 import hu.belicza.andras.sc2gearspluginapi.api.ReplayFactoryApi.ReplayContent;
 import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayAutosaveListener;
 import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpCallback;
@@ -15,20 +13,17 @@ import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IReplay;
 
 import java.io.File;
 import java.util.EnumSet;
+import java.util.List;
 
-public class WinratePlugin implements Plugin, Configurable {
+import org.gorjusb.sc2gears.winrate.domain.MatchRecord;
+
+public class WinratePlugin implements Plugin {
 
 	private PluginDescriptor pluginDescriptor;
 	private PluginServices pluginServces;
 	private GeneralServices generalServices;
-
 	private ReplayAutosaveListener replayAutosaveListener;
-	private ReplayOpsPopupMenuItemListener replayOpsMenuListener;
-	private Integer menuListenerHandler;
-
-	private SettingsModel settings = new SettingsModel();
-
-	private WinrateStatsModel winrateModel = new WinrateStatsModel();
+	private MatchRecord matchRecord = new MatchRecord();
 
 	class WinrateReplayAutoSaveListener implements ReplayAutosaveListener {
 		public void replayAutosaved(File autosavedReplayFile,
@@ -36,6 +31,14 @@ public class WinratePlugin implements Plugin, Configurable {
 			IReplay replay = generalServices.getReplayFactoryApi().getReplay(
 					autosavedReplayFile.getAbsolutePath(),
 					EnumSet.allOf(ReplayContent.class));
+
+			IPlayer favoredPlayer = findMostFavoredPlayer(generalServices
+					.getInfoApi().getFavoredPlayerList(), replay.getPlayers());
+
+			if (favoredPlayer != null) {
+				adjustMatchRecord(matchRecord, favoredPlayer);
+			}
+
 		}
 	}
 
@@ -58,25 +61,12 @@ public class WinratePlugin implements Plugin, Configurable {
 	public WinratePlugin() {
 	}
 
-	public SettingsControl getSettingsControl() {
-		SettingsControl settingsControl = new WinrateSettingsControl(settings,
-				pluginServces.getSettingsApi(), generalServices.getInfoApi());
-
-		return settingsControl;
-	}
-
-	public boolean isActionRequired() {
-		return false;
-	}
-
 	public void destroy() {
 		/*
 		 * unregister our replay listener, because we play nice
 		 */
 		generalServices.getCallbackApi().removeReplayAutosaveListener(
 				replayAutosaveListener);
-		generalServices.getCallbackApi().removeReplayOpsPopupMenuItem(
-				menuListenerHandler);
 	}
 
 	public void init(PluginDescriptor pluginDescriptor,
@@ -86,13 +76,9 @@ public class WinratePlugin implements Plugin, Configurable {
 		this.generalServices = generalServices;
 
 		replayAutosaveListener = new WinrateReplayAutoSaveListener();
-		replayOpsMenuListener = new PrintWinnersOpsMenuItemListener();
 
 		generalServices.getCallbackApi().addReplayAutosaveListener(
 				replayAutosaveListener);
-		menuListenerHandler = generalServices.getCallbackApi()
-				.addReplayOpsPopupMenuItem("Print Player Win/Loss", null,
-						replayOpsMenuListener);
 	}
 
 	PluginDescriptor getPluginDescriptor() {
@@ -117,6 +103,33 @@ public class WinratePlugin implements Plugin, Configurable {
 
 	void setGeneralServices(GeneralServices generalServices) {
 		this.generalServices = generalServices;
+	}
+
+	private IPlayer findMostFavoredPlayer(List<String> favoredPlayerNames,
+			IPlayer[] players) {
+		IPlayer favoredPlayer = null;
+
+		FIND_FAVORED: for (String favoredPlayerName : generalServices
+				.getInfoApi().getFavoredPlayerList()) {
+
+			for (IPlayer player : players) {
+				String playerName = player.getPlayerId().getName();
+				if (favoredPlayerName.equals(playerName)) {
+					favoredPlayer = player;
+					break FIND_FAVORED;
+				}
+			}
+
+		}
+
+		return favoredPlayer;
+	}
+
+	private void adjustMatchRecord(MatchRecord record, IPlayer player) {
+		record.setPlayed(record.getPlayed() + 1);
+		if (player.isWinner()) {
+			record.setWon(record.getWon() + 1);
+		}
 	}
 
 }
