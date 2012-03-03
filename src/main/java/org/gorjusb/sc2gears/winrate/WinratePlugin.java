@@ -15,11 +15,10 @@ import java.io.File;
 import java.util.EnumSet;
 import java.util.List;
 
-import javax.swing.JDialog;
 import javax.swing.JMenuItem;
-import javax.swing.JWindow;
 
 import org.gorjusb.sc2gears.winrate.domain.MatchRecord;
+import org.gorjusb.sc2gears.winrate.presentation.MovableBorderlessDialog;
 import org.gorjusb.sc2gears.winrate.presentation.ViewBinder;
 import org.gorjusb.sc2gears.winrate.presentation.WinratePresentationModel;
 import org.gorjusb.sc2gears.winrate.presentation.WinrateView;
@@ -31,7 +30,7 @@ public class WinratePlugin implements Plugin {
 	private GeneralServices generalServices;
 	private ReplayAutosaveListener replayAutosaveListener;
 	private MatchRecord matchRecord;
-	private JDialog dialog;
+	private MovableBorderlessDialog dialog;
 	private WinrateView view;
 	private WinratePresentationModel model;
 	private ViewBinder binder;
@@ -72,7 +71,7 @@ public class WinratePlugin implements Plugin {
 		this.pluginServces = pluginServices;
 		this.generalServices = generalServices;
 		this.matchRecord = new MatchRecord();
-		this.dialog = new JDialog();
+		this.dialog = new MovableBorderlessDialog(generalServices.getGuiUtilsApi().getMainFrame());
 		this.model = new WinratePresentationModel(this.matchRecord);
 		this.binder = new ViewBinder();
 		this.menuItem = new JMenuItem("On-top winrate info");
@@ -136,9 +135,8 @@ public class WinratePlugin implements Plugin {
 	}
 
 	private void configureDisplay() {
-		dialog.setUndecorated(true);
 		dialog.setAlwaysOnTop(true);
-
+		
 		view = new WinrateView();
 		dialog.getContentPane().add(view);
 		dialog.pack();
