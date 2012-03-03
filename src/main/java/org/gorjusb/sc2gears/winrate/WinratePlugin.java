@@ -6,16 +6,23 @@ import hu.belicza.andras.sc2gearspluginapi.PluginDescriptor;
 import hu.belicza.andras.sc2gearspluginapi.PluginServices;
 import hu.belicza.andras.sc2gearspluginapi.api.ReplayFactoryApi.ReplayContent;
 import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayAutosaveListener;
-import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpCallback;
-import hu.belicza.andras.sc2gearspluginapi.api.listener.ReplayOpsPopupMenuItemListener;
 import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IPlayer;
 import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IReplay;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.swing.JDialog;
+import javax.swing.JMenuItem;
+import javax.swing.JWindow;
+
 import org.gorjusb.sc2gears.winrate.domain.MatchRecord;
+import org.gorjusb.sc2gears.winrate.presentation.ViewBinder;
+import org.gorjusb.sc2gears.winrate.presentation.WinratePresentationModel;
+import org.gorjusb.sc2gears.winrate.presentation.WinrateView;
 
 public class WinratePlugin implements Plugin {
 
@@ -23,7 +30,12 @@ public class WinratePlugin implements Plugin {
 	private PluginServices pluginServces;
 	private GeneralServices generalServices;
 	private ReplayAutosaveListener replayAutosaveListener;
-	private MatchRecord matchRecord = new MatchRecord();
+	private MatchRecord matchRecord;
+	private JDialog dialog;
+	private WinrateView view;
+	private WinratePresentationModel model;
+	private ViewBinder binder;
+	private JMenuItem menuItem;
 
 	class WinrateReplayAutoSaveListener implements ReplayAutosaveListener {
 		public void replayAutosaved(File autosavedReplayFile,
@@ -32,29 +44,13 @@ public class WinratePlugin implements Plugin {
 					autosavedReplayFile.getAbsolutePath(),
 					EnumSet.allOf(ReplayContent.class));
 
-			IPlayer favoredPlayer = findMostFavoredPlayer(generalServices
-					.getInfoApi().getFavoredPlayerList(), replay.getPlayers());
+			IPlayer player = findMostFavoredPlayer(generalServices.getInfoApi()
+					.getFavoredPlayerList(), replay.getPlayers());
 
-			if (favoredPlayer != null) {
-				adjustMatchRecord(matchRecord, favoredPlayer);
+			if (player != null) {
+				adjustMatchRecord(matchRecord, player);
 			}
 
-		}
-	}
-
-	class PrintWinnersOpsMenuItemListener implements
-			ReplayOpsPopupMenuItemListener {
-		public void actionPerformed(File[] files, ReplayOpCallback callback,
-				Integer handler) {
-			for (File file : files) {
-				IReplay replay = generalServices.getReplayFactoryApi()
-						.getReplay(file.getAbsolutePath(),
-								EnumSet.allOf(ReplayContent.class));
-				for (IPlayer player : replay.getPlayers()) {
-					System.out.println(player.getPlayerId().getFullName()
-							+ ": " + (player.isWinner() ? "winner" : "loser"));
-				}
-			}
 		}
 	}
 
@@ -65,8 +61,9 @@ public class WinratePlugin implements Plugin {
 		/*
 		 * unregister our replay listener, because we play nice
 		 */
-		generalServices.getCallbackApi().removeReplayAutosaveListener(
-				replayAutosaveListener);
+		unregisterAutosaveListener();
+		unregisterMenuItem();
+		disposeDisplay();
 	}
 
 	public void init(PluginDescriptor pluginDescriptor,
@@ -74,11 +71,15 @@ public class WinratePlugin implements Plugin {
 		this.pluginDescriptor = pluginDescriptor;
 		this.pluginServces = pluginServices;
 		this.generalServices = generalServices;
+		this.matchRecord = new MatchRecord();
+		this.dialog = new JDialog();
+		this.model = new WinratePresentationModel(this.matchRecord);
+		this.binder = new ViewBinder();
+		this.menuItem = new JMenuItem("On-top winrate info");
 
-		replayAutosaveListener = new WinrateReplayAutoSaveListener();
-
-		generalServices.getCallbackApi().addReplayAutosaveListener(
-				replayAutosaveListener);
+		registerAutosaveListener();
+		registerMenuItem();
+		configureDisplay();
 	}
 
 	PluginDescriptor getPluginDescriptor() {
@@ -129,7 +130,57 @@ public class WinratePlugin implements Plugin {
 		record.setPlayed(record.getPlayed() + 1);
 		if (player.isWinner()) {
 			record.setWon(record.getWon() + 1);
+		} else {
+			record.setLost(record.getLost() + 1);
 		}
 	}
 
+	private void configureDisplay() {
+		dialog.setUndecorated(true);
+		dialog.setAlwaysOnTop(true);
+
+		view = new WinrateView();
+		dialog.getContentPane().add(view);
+		dialog.pack();
+		generalServices.getGuiUtilsApi().createCloseButton(dialog);
+
+		binder.bind(view, model);
+	}
+
+	private void registerAutosaveListener() {
+		replayAutosaveListener = new WinrateReplayAutoSaveListener();
+
+		generalServices.getCallbackApi().addReplayAutosaveListener(
+				replayAutosaveListener);
+	}
+
+	private void unregisterAutosaveListener() {
+		generalServices.getCallbackApi().removeReplayAutosaveListener(
+				replayAutosaveListener);
+		dialog.setVisible(false);
+	}
+
+	private void registerMenuItem() {
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("plugin menu item selected");
+				if (!dialog.isVisible()) {
+					System.out.println("setting window visible");
+					dialog.setVisible(true);
+				}
+			}
+		});
+
+		generalServices.getCallbackApi().addMenuItemToPluginsMenu(menuItem);
+	}
+	
+	private void unregisterMenuItem() {
+		generalServices.getCallbackApi().removeMenuItemFromPluginsMenu(menuItem);
+	}
+	
+	private void disposeDisplay() {
+		dialog.setVisible(false);
+		dialog.dispose();
+	}
 }
