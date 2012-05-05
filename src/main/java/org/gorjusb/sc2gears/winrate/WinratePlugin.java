@@ -12,6 +12,7 @@ import hu.belicza.andras.sc2gearspluginapi.api.sc2replay.IReplay;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -43,13 +44,30 @@ public class WinratePlugin implements Plugin {
 					autosavedReplayFile.getAbsolutePath(),
 					EnumSet.allOf(ReplayContent.class));
 
-			IPlayer player = findMostFavoredPlayer(generalServices.getInfoApi()
-					.getFavoredPlayerList(), replay.getPlayers());
-
-			if (player != null) {
-				adjustMatchRecord(matchRecord, player);
+			List<IPlayer> favoredPlayers = findFavoredPlayers(replay);
+			
+			if (favoredPlayers.size() == 1) {
+				adjustMatchRecord(matchRecord, favoredPlayers.get(0));
+			} else if (favoredPlayers.size() > 1) {
+				/*
+				 * if multiple players in replay are considered 'favored'
+				 * we just make sure all of them are either winners or losers.
+				 * As long as all the results are consistent, we'll adjust 
+				 * the record accordingly. This is a special weird case,
+				 * but it could allow people who lend out their smurf accounts
+				 * to play team games with people and still have their stats
+				 * work.    
+				 */
+				boolean firstResult = favoredPlayers.get(0).isWinner();
+				
+				for (IPlayer player : favoredPlayers) {
+					if (player.isWinner() != firstResult) {
+						return;
+					}
+				}
+				
+				adjustMatchRecord(matchRecord, favoredPlayers.get(0));
 			}
-
 		}
 	}
 
@@ -71,7 +89,8 @@ public class WinratePlugin implements Plugin {
 		this.pluginServces = pluginServices;
 		this.generalServices = generalServices;
 		this.matchRecord = new MatchRecord();
-		this.dialog = new MovableBorderlessDialog(generalServices.getGuiUtilsApi().getMainFrame());
+		this.dialog = new MovableBorderlessDialog(generalServices
+				.getGuiUtilsApi().getMainFrame());
 		this.model = new WinratePresentationModel(this.matchRecord);
 		this.binder = new ViewBinder();
 		this.menuItem = new JMenuItem("On-top winrate info");
@@ -105,24 +124,18 @@ public class WinratePlugin implements Plugin {
 		this.generalServices = generalServices;
 	}
 
-	private IPlayer findMostFavoredPlayer(List<String> favoredPlayerNames,
-			IPlayer[] players) {
-		IPlayer favoredPlayer = null;
+	private List<IPlayer> findFavoredPlayers(IReplay replay) {
+		List<IPlayer> favoredPlayerObjs = new ArrayList<IPlayer>();
+		List<String> favoredPlayerNames = generalServices.getInfoApi()
+				.getFavoredPlayerList();
 
-		FIND_FAVORED: for (String favoredPlayerName : generalServices
-				.getInfoApi().getFavoredPlayerList()) {
-
-			for (IPlayer player : players) {
-				String playerName = player.getPlayerId().getName();
-				if (favoredPlayerName.equals(playerName)) {
-					favoredPlayer = player;
-					break FIND_FAVORED;
-				}
+		for (IPlayer player : replay.getPlayers()) {
+			if (favoredPlayerNames.contains(player.getPlayerId().getName())) {
+				favoredPlayerObjs.add(player);
 			}
-
 		}
 
-		return favoredPlayer;
+		return favoredPlayerObjs;
 	}
 
 	private void adjustMatchRecord(MatchRecord record, IPlayer player) {
@@ -136,7 +149,7 @@ public class WinratePlugin implements Plugin {
 
 	private void configureDisplay() {
 		dialog.setAlwaysOnTop(true);
-		
+
 		view = new WinrateView();
 		dialog.getContentPane().add(view);
 		dialog.pack();
@@ -172,11 +185,12 @@ public class WinratePlugin implements Plugin {
 
 		generalServices.getCallbackApi().addMenuItemToPluginsMenu(menuItem);
 	}
-	
+
 	private void unregisterMenuItem() {
-		generalServices.getCallbackApi().removeMenuItemFromPluginsMenu(menuItem);
+		generalServices.getCallbackApi()
+				.removeMenuItemFromPluginsMenu(menuItem);
 	}
-	
+
 	private void disposeDisplay() {
 		dialog.setVisible(false);
 		dialog.dispose();
